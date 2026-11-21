@@ -1,7 +1,9 @@
 using Serilog;
 using WorkflowSystem.Application;
+using WorkflowSystem.Application.Abstractions;
 using WorkflowSystem.Infrastructure;
 using WorkflowSystem.Workflows;
+using WorkflowSystem.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,10 @@ builder.Services.AddWorkflows();
 
 // MVC + Razor Views（不引入 React/Vue/Angular）。
 builder.Services.AddControllersWithViews();
+
+// 当前用户上下文（依赖 HttpContext）。
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // 健康检查（阶段 2 提供 /health 探活端点，供部署与监控使用）。
 builder.Services.AddHealthChecks();

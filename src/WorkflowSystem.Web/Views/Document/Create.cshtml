@@ -1,0 +1,45 @@
+@model CreateDocumentDto
+@{
+    ViewData["Title"] = "新建文档";
+    var documentTypes = ViewBag.DocumentTypes as IReadOnlyList<DocumentTypeDto>;
+}
+
+<h2>新建文档</h2>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="DocumentTypeId" class="form-label">文档类型</label>
+        <select asp-for="DocumentTypeId" class="form-select" required>
+            <option value="">-- 请选择 --</option>
+            @if (documentTypes != null)
+            {
+                @foreach (var t in documentTypes)
+                {
+                    <option value="@t.Id">@t.Name</option>
+                }
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">标题</label>
+        <input asp-for="Title" class="form-control" required />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="OwnerDepartmentId" class="form-label">所属部门</label>
+        <input asp-for="OwnerDepartmentId" class="form-control" placeholder="部门 Id（阶段 5 接入部门选择器）" />
+    </div>
+
+    <div class="mb-3">
+        <div class="alert alert-warning">
+            动态字段将在阶段 4 后续补充「按文档类型动态渲染」。当前请先创建草稿，再在编辑页填写字段值。
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">保存草稿</button>
+    <a asp-action="Index" class="btn btn-secondary">取消</a>
+</form>

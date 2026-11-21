@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using WorkflowSystem.Application.Abstractions;
+using WorkflowSystem.Application.Services;
 
 namespace WorkflowSystem.Application;
 
@@ -10,8 +12,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // 阶段 3+ 会注册 FluentValidation、MediatR（如需）、各应用服务实现。
-        // 当前阶段保持最小可用，确保解决方案可编译、可运行。
+        // 系统时钟。
+        services.AddSingleton<IClock, SystemClock>();
+
+        // 阶段 5+ 注册权限服务、验证器等。
 
         return services;
     }

@@ -1,0 +1,81 @@
+@model DocumentDetailDto
+@{
+    ViewData["Title"] = $"文档详情 - {Model.DocumentNo}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@Model.Title</h2>
+    <div>
+        @if (Model.DocumentStatus == DocumentStatus.Draft || Model.DocumentStatus == DocumentStatus.Returned)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">编辑</a>
+        }
+        <a asp-action="Index" class="btn btn-secondary">返回列表</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">基本信息</div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">文档编号</dt>
+            <dd class="col-sm-9">@Model.DocumentNo</dd>
+
+            <dt class="col-sm-3">文档类型</dt>
+            <dd class="col-sm-9">@Model.DocumentTypeName</dd>
+
+            <dt class="col-sm-3">申请人</dt>
+            <dd class="col-sm-9">@Model.ApplicantName</dd>
+
+            <dt class="col-sm-3">所属部门</dt>
+            <dd class="col-sm-9">@Model.OwnerDepartmentName</dd>
+
+            <dt class="col-sm-3">文档状态</dt>
+            <dd class="col-sm-9">@Model.DocumentStatus</dd>
+
+            <dt class="col-sm-3">工作流状态</dt>
+            <dd class="col-sm-9">@Model.WorkflowStatus</dd>
+
+            <dt class="col-sm-3">当前版本</dt>
+            <dd class="col-sm-9">v@(Model.CurrentVersion)</dd>
+
+            <dt class="col-sm-3">创建时间</dt>
+            <dd class="col-sm-9">@Model.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</dd>
+
+            @if (Model.SubmittedAtUtc.HasValue)
+            {
+                <dt class="col-sm-3">提交时间</dt>
+                <dd class="col-sm-9">@Model.SubmittedAtUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+@if (Model.FieldValues.Any())
+{
+    <div class="card">
+        <div class="card-header">业务字段</div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr><th>字段</th><th>值</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var fv in Model.FieldValues)
+                    {
+                        <tr>
+                            <td>@fv.FieldKey</td>
+                            <td>
+                                @(fv.ValueNumber?.ToString() ?? fv.ValueText ?? fv.ValueDate?.ToString("yyyy-MM-dd") ?? fv.ValueBoolean?.ToString() ?? "—")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-light">该文档暂无业务字段值。</div>
+}

@@ -1,0 +1,67 @@
+@model UpdateDocumentDto
+@{
+    ViewData["Title"] = "编辑文档";
+    var document = ViewBag.Document as DocumentDetailDto;
+    var fieldDefinitions = ViewBag.FieldDefinitions as IReadOnlyList<DocumentFieldDefinitionDto>;
+}
+
+<h2>编辑文档</h2>
+<p class="text-muted">@document?.DocumentNo</p>
+
+<form asp-action="Edit" asp-route-id="@document?.Id" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">标题</label>
+        <input asp-for="Title" class="form-control" required />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <h5>业务字段</h5>
+    @if (fieldDefinitions != null && fieldDefinitions.Any())
+    {
+        for (var i = 0; i < Model.FieldValues.Count; i++)
+        {
+            var fieldValue = Model.FieldValues[i];
+            var definition = fieldDefinitions.FirstOrDefault(d => d.Id == fieldValue.FieldDefinitionId);
+            if (definition == null) continue;
+
+            <input type="hidden" asp-for="FieldValues[i].FieldDefinitionId" />
+
+            <div class="mb-3">
+                <label class="form-label">
+                    @definition.DisplayName
+                    @if (definition.IsRequired) { <span class="text-danger">*</span> }
+                </label>
+
+                @switch (definition.FieldType)
+                {
+                    case FieldType.Number:
+                    case FieldType.Amount:
+                        <input type="number" step="any" asp-for="FieldValues[i].ValueNumber" class="form-control" />
+                        break;
+                    case FieldType.Date:
+                        <input type="date" asp-for="FieldValues[i].ValueDate" class="form-control" />
+                        break;
+                    case FieldType.Boolean:
+                        <select asp-for="FieldValues[i].ValueBoolean" class="form-select">
+                            <option value="">-- 请选择 --</option>
+                            <option value="true">是</option>
+                            <option value="false">否</option>
+                        </select>
+                        break;
+                    default:
+                        <input type="text" asp-for="FieldValues[i].ValueText" class="form-control" />
+                        break;
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-light">该文档类型没有定义业务字段。</div>
+    }
+
+    <button type="submit" class="btn btn-primary">保存</button>
+    <a asp-action="Details" asp-route-id="@document?.Id" class="btn btn-secondary">取消</a>
+</form>
