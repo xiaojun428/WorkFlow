@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using WorkflowSystem.Application.Abstractions;
 using WorkflowSystem.Application.Documents;
+using WorkflowSystem.Application.Permissions;
 using WorkflowSystem.Infrastructure.Persistence;
 using WorkflowSystem.Infrastructure.Services;
 
@@ -35,7 +36,10 @@ public static class DependencyInjection
         services.AddScoped<IDocumentNumberService, DocumentNumberService>();
         services.AddScoped<IDocumentService, DocumentService>();
 
-        // 阶段 5+ 注册 IEmailService、权限服务等实现。
+        // 权限服务（阶段 5）。
+        services.AddScoped<IPermissionService, PermissionService>();
+
+        // 阶段 6+ 注册 IEmailService、审批服务等实现。
 
         return services;
     }

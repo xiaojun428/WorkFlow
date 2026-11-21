@@ -188,6 +188,13 @@ public class DocumentService : IDocumentService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<Document?> GetDocumentEntityAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _db.Documents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
     // ===================== 列表查询 =====================
 
     public async Task<PagedResult<DocumentListItemDto>> QueryAsync(DocumentQuery query, CancellationToken cancellationToken = default)

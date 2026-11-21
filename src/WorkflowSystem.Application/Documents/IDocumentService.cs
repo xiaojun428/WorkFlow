@@ -1,4 +1,5 @@
 using WorkflowSystem.Application.Documents.Dtos;
+using WorkflowSystem.Domain.Entities.Document;
 
 namespace WorkflowSystem.Application.Documents;
 
@@ -18,6 +19,12 @@ public interface IDocumentService
     Task<DocumentDetailDto?> GetDocumentAsync(Guid id, CancellationToken cancellationToken = default);
     Task<DocumentDetailDto> UpdateDraftAsync(Guid id, UpdateDocumentDto dto, CancellationToken cancellationToken = default);
     Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 加载文档领域实体（供资源级授权使用，不返回 DTO）。
+    /// 用于 Controller 在调用 IAuthorizationService 前取得资源对象。
+    /// </summary>
+    Task<Document?> GetDocumentEntityAsync(Guid id, CancellationToken cancellationToken = default);
 
     // 列表查询
     Task<PagedResult<DocumentListItemDto>> QueryAsync(DocumentQuery query, CancellationToken cancellationToken = default);

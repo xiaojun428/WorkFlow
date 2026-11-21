@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Serilog;
 using WorkflowSystem.Application;
 using WorkflowSystem.Application.Abstractions;
 using WorkflowSystem.Infrastructure;
 using WorkflowSystem.Workflows;
+using WorkflowSystem.Web.Authorization;
 using WorkflowSystem.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +30,12 @@ builder.Services.AddControllersWithViews();
 // 当前用户上下文（依赖 HttpContext）。
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// 授权：Policy-based + 资源级 AuthorizationHandler（阶段 5）。
+builder.Services.AddAuthorization(options => options.AddPermissionPolicies());
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, DocumentAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ApprovalTaskAuthorizationHandler>();
 
 // 健康检查（阶段 2 提供 /health 探活端点，供部署与监控使用）。
 builder.Services.AddHealthChecks();
