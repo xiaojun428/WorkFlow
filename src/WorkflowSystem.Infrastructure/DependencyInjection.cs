@@ -42,8 +42,8 @@ public static class DependencyInjection
         // 权限服务（阶段 5）。
         services.AddScoped<IPermissionService, PermissionService>();
 
-        // 审批与工作流服务（阶段 6，工作流暂用最小实现，阶段 7 替换为 Elsa）。
-        services.AddScoped<IWorkflowService, MinimalWorkflowService>();
+        // 审批与工作流服务（阶段 7：工作流已切换为 Elsa Workflows 3 实现）。
+        services.AddScoped<IWorkflowService, ElsaWorkflowService>();
         services.AddScoped<IApprovalService, ApprovalService>();
 
         // 审计服务（阶段 6）。

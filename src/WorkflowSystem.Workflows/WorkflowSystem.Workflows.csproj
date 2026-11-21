@@ -5,6 +5,11 @@
     <ProjectReference Include="..\WorkflowSystem.Domain\WorkflowSystem.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Elsa" Version="3.9.0" />
+    <PackageReference Include="Elsa.Persistence.EFCore.SqlServer" Version="3.9.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

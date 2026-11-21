@@ -22,7 +22,7 @@ builder.Host.UseSerilog();
 // 应用层 / 基础设施层 / 工作流层服务注册（组合根）。
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddWorkflows();
+builder.Services.AddWorkflows(builder.Configuration);
 
 // MVC + Razor Views（不引入 React/Vue/Angular）。
 builder.Services.AddControllersWithViews();
