@@ -110,34 +110,103 @@ public static class SeedData
 
     private static void SeedRolePermissions(ModelBuilder modelBuilder)
     {
-        // 为演示，给 Manager 角色授予核心审批相关权限（其余权限在阶段 5 完整配置）。
-        // 这里使用固定 Guid 保证幂等。
-        var rolePermissions = new[]
+        // 完整配置各角色的操作权限（阶段 5 补全，此前仅 Manager 有审批权限）。
+        // 使用固定 Guid 保证幂等。
+
+        // User（普通员工）：创建、查看自己的文档、编辑、删除、提交、撤回、下载附件。
+        var userPermissions = new[]
         {
-            new { RoleId = RoleManager, PermissionId = ApprovePermissionId },
-            new { RoleId = RoleManager, PermissionId = RejectPermissionId },
-            new { RoleId = RoleManager, PermissionId = ReturnPermissionId },
-            new { RoleId = RoleManager, PermissionId = TransferPermissionId },
-            new { RoleId = RoleManager, PermissionId = ViewDepartment },
+            CreatePermissionId, ViewOwnPermissionId, EditPermissionId, DeletePermissionId,
+            SubmitPermissionId, WithdrawPermissionId, DownloadAttachmentPermissionId,
         };
 
-        var items = rolePermissions.Select((rp, i) => new
+        // Manager（经理）：在员工权限基础上，增加部门查看 + 审批 + 转交 + 审计。
+        var managerPermissions = new[]
         {
-            rp.RoleId,
-            rp.PermissionId
-        }).ToArray();
+            CreatePermissionId, ViewOwnPermissionId, ViewDepartmentPermissionId, EditPermissionId,
+            SubmitPermissionId, WithdrawPermissionId, DownloadAttachmentPermissionId,
+            ApprovePermissionId, RejectPermissionId, ReturnPermissionId, TransferPermissionId,
+            ViewAuditLogPermissionId,
+        };
 
-        modelBuilder.Entity<RolePermission>().HasData(items);
+        // Finance（财务）：全量查看 + 审批 + 转交 + 审计。
+        var financePermissions = new[]
+        {
+            ViewDepartmentPermissionId, ViewAllPermissionId, DownloadAttachmentPermissionId,
+            ApprovePermissionId, RejectPermissionId, ReturnPermissionId, TransferPermissionId,
+            ViewAuditLogPermissionId,
+        };
+
+        // QA（品质）：全量查看 + 审批 + 转交 + 审计。
+        var qaPermissions = new[]
+        {
+            ViewDepartmentPermissionId, ViewAllPermissionId, DownloadAttachmentPermissionId,
+            ApprovePermissionId, RejectPermissionId, ReturnPermissionId, TransferPermissionId,
+            ViewAuditLogPermissionId,
+        };
+
+        // Purchasing（采购）：创建、查看自己的文档、编辑、提交、撤回、下载附件。
+        var purchasingPermissions = new[]
+        {
+            CreatePermissionId, ViewOwnPermissionId, EditPermissionId, SubmitPermissionId,
+            WithdrawPermissionId, DownloadAttachmentPermissionId,
+        };
+
+        // WorkflowAdmin（流程管理员）：全量查看 + 流程管理 + 审计。
+        var workflowAdminPermissions = new[]
+        {
+            ViewDepartmentPermissionId, ViewAllPermissionId, DownloadAttachmentPermissionId,
+            ManageWorkflowPermissionId, ViewAuditLogPermissionId,
+        };
+
+        // SystemAdmin（系统管理员）：拥有全部 16 个操作权限码。
+        var systemAdminPermissions = new[]
+        {
+            CreatePermissionId, ViewOwnPermissionId, ViewDepartmentPermissionId, ViewAllPermissionId,
+            EditPermissionId, DeletePermissionId, SubmitPermissionId, WithdrawPermissionId,
+            ApprovePermissionId, RejectPermissionId, ReturnPermissionId, TransferPermissionId,
+            DownloadAttachmentPermissionId, ManageWorkflowPermissionId, ManagePermissionPermissionId,
+            ViewAuditLogPermissionId,
+        };
+
+        var rolePermissions = new List<(Guid RoleId, Guid PermissionId)>();
+        AddRolePermissions(rolePermissions, RoleUser, userPermissions);
+        AddRolePermissions(rolePermissions, RoleManager, managerPermissions);
+        AddRolePermissions(rolePermissions, RoleFinance, financePermissions);
+        AddRolePermissions(rolePermissions, RoleQa, qaPermissions);
+        AddRolePermissions(rolePermissions, RolePurchasing, purchasingPermissions);
+        AddRolePermissions(rolePermissions, RoleWorkflowAdmin, workflowAdminPermissions);
+        AddRolePermissions(rolePermissions, RoleSystemAdmin, systemAdminPermissions);
+
+        modelBuilder.Entity<RolePermission>().HasData(
+            rolePermissions.Select(x => new { RoleId = x.RoleId, PermissionId = x.PermissionId }).ToArray());
+    }
+
+    private static void AddRolePermissions(List<(Guid RoleId, Guid PermissionId)> list, Guid roleId, Guid[] permissionIds)
+    {
+        foreach (var permissionId in permissionIds)
+        {
+            list.Add((roleId, permissionId));
+        }
     }
 
     // 权限固定 Guid（与 SeedPermissions 中的顺序对应：Create=1, ViewOwn=2, ViewDepartment=3, ViewAll=4, Edit=5, Delete=6, Submit=7, Withdraw=8, Approve=9, Reject=10, Return=11, Transfer=12, DownloadAttachment=13, ManageWorkflow=14, ManagePermission=15, ViewAuditLog=16）。
+    private static readonly Guid CreatePermissionId = new("00000000-0000-0000-0000-000000000001");
+    private static readonly Guid ViewOwnPermissionId = new("00000000-0000-0000-0000-000000000002");
+    private static readonly Guid ViewDepartmentPermissionId = new("00000000-0000-0000-0000-000000000003");
+    private static readonly Guid ViewAllPermissionId = new("00000000-0000-0000-0000-000000000004");
+    private static readonly Guid EditPermissionId = new("00000000-0000-0000-0000-000000000005");
+    private static readonly Guid DeletePermissionId = new("00000000-0000-0000-0000-000000000006");
+    private static readonly Guid SubmitPermissionId = new("00000000-0000-0000-0000-000000000007");
+    private static readonly Guid WithdrawPermissionId = new("00000000-0000-0000-0000-000000000008");
     private static readonly Guid ApprovePermissionId = new("00000000-0000-0000-0000-000000000009");
     private static readonly Guid RejectPermissionId = new("00000000-0000-0000-0000-000000000010");
     private static readonly Guid ReturnPermissionId = new("00000000-0000-0000-0000-000000000011");
     private static readonly Guid TransferPermissionId = new("00000000-0000-0000-0000-000000000012");
-    private static readonly Guid ViewDepartment = new("00000000-0000-0000-0000-000000000003");
-    private static readonly Guid ViewOwn = new("00000000-0000-0000-0000-000000000002");
-    private static readonly Guid CreatePermissionId = new("00000000-0000-0000-0000-000000000001");
+    private static readonly Guid DownloadAttachmentPermissionId = new("00000000-0000-0000-0000-000000000013");
+    private static readonly Guid ManageWorkflowPermissionId = new("00000000-0000-0000-0000-000000000014");
+    private static readonly Guid ManagePermissionPermissionId = new("00000000-0000-0000-0000-000000000015");
+    private static readonly Guid ViewAuditLogPermissionId = new("00000000-0000-0000-0000-000000000016");
 
     private static void SeedUsers(ModelBuilder modelBuilder)
     {
