@@ -1,0 +1,47 @@
+# ===== .NET =====
+bin/
+obj/
+[Bb]uild/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ===== 编译产物 =====
+*.dll
+*.exe
+*.pdb
+*.cache
+*.rsp
+TestResults/
+
+# ===== 用户密钥与敏感配置（严禁提交） =====
+appsettings.Production.json
+secrets.json
+*.pfx
+*.snk
+.env
+*.secret
+
+# ===== 日志 =====
+logs/
+*.log
+*.nlog
+
+# ===== 上传附件与本地数据库 =====
+uploads/
+App_Data/
+*.mdf
+*.ldf
+*.bak
+
+# ===== IDE =====
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===== 系统 =====
+.DS_Store
+Thumbs.db
