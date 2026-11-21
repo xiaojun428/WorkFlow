@@ -1,3 +1,5 @@
+using Elsa;
+using Elsa.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +13,13 @@ using WorkflowSystem.Web.Authorization;
 using WorkflowSystem.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 开发环境：禁用 Elsa API 端点安全（可视化设计器免认证，仅限本地开发）。
+// 生产环境必须启用 Elsa 认证（API Key / JWT / 外部认证），不可禁用。
+if (builder.Environment.IsDevelopment())
+{
+    EndpointSecurityOptions.DisableSecurity();
+}
 
 // 使用 Serilog 结构化日志：先读取配置，再作为默认日志工厂。
 Log.Logger = new LoggerConfiguration()
@@ -65,6 +74,17 @@ builder.Services.AddScoped<IAuthorizationHandler, ApprovalTaskAuthorizationHandl
 // 健康检查（阶段 2 提供 /health 探活端点，供部署与监控使用）。
 builder.Services.AddHealthChecks();
 
+// CORS：允许 Elsa Studio 设计器（前端）跨域访问 Elsa API（开发环境放开，生产环境应收紧到具体来源）。
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Swagger / OpenAPI：后续阶段仅对需要的 API 控制器启用。
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -94,6 +114,9 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// CORS 需在路由后、认证前（供 Elsa Studio 跨域调用）。
+app.UseCors();
+
 // 本地化中间件（需在路由后、认证前启用 RequestCulture）。
 app.UseRequestLocalization();
 
@@ -103,6 +126,9 @@ app.UseAuthorization();
 // 静态资源与健康检查端点。
 app.MapStaticAssets();
 app.MapHealthChecks("/health");
+
+// Elsa Workflows REST API（供 Elsa Studio 可视化设计器调用）。
+app.MapWorkflowsApi();
 
 app.MapControllerRoute(
     name: "default",

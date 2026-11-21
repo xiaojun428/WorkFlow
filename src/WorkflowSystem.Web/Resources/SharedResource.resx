@@ -48,4 +48,7 @@
   <data name="PermissionManagement" xml:space="preserve">
     <value>权限管理</value>
   </data>
+  <data name="WorkflowDesigner" xml:space="preserve">
+    <value>工作流设计</value>
+  </data>
 </root>

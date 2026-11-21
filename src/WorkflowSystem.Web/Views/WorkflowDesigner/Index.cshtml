@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "工作流设计";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>工作流设计</h2>
+</div>
+
+<div class="alert alert-info">
+    使用可视化设计器定义审批流程。您可以在画布中拖拽节点、连线，配置审批链与条件分支。
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p class="mb-2">现有工作流定义（可点击进入可视化编辑）：</p>
+        <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                预算申请审批流程
+                <a class="btn btn-sm btn-outline-primary" asp-action="Editor" asp-route-definitionId="Budget">编辑</a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                EOL 申请审批流程
+                <a class="btn btn-sm btn-outline-primary" asp-action="Editor" asp-route-definitionId="EOL">编辑</a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                采购申请审批流程
+                <a class="btn btn-sm btn-outline-primary" asp-action="Editor" asp-route-definitionId="Purchase">编辑</a>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                供应商申请审批流程
+                <a class="btn btn-sm btn-outline-primary" asp-action="Editor" asp-route-definitionId="Vendor">编辑</a>
+            </li>
+        </ul>
+    </div>
+</div>

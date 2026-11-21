@@ -45,3 +45,8 @@ App_Data/
 # ===== 系统 =====
 .DS_Store
 Thumbs.db
+
+# ===== Elsa Studio 设计器（Blazor WASM 产物，由 scripts/setup-elsa-studio.ps1 生成）=====
+src/WorkflowSystem.Web/wwwroot/elsa-studio/_framework/
+src/WorkflowSystem.Web/wwwroot/elsa-studio/_content/
+src/WorkflowSystem.Web/wwwroot/elsa-studio/Elsa.Studio.Host.CustomElements.styles.css

@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "工作流设计器";
+    var definitionId = ViewBag.DefinitionId as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">
+        工作流设计器
+        @if (!string.IsNullOrEmpty(definitionId))
+        {
+            <span class="badge bg-secondary">@definitionId</span>
+        }
+    </h4>
+    <a class="btn btn-sm btn-outline-secondary" asp-action="Index">返回列表</a>
+</div>
+
+<div class="alert alert-light py-2 small">
+    提示：设计器加载较慢（Blazor WebAssembly 首次需下载运行时），请耐心等待。保存会写入工作流定义。
+</div>
+
+<iframe
+    id="workflowDesignerFrame"
+    src="@Url.Content("~/elsa-studio/index.html")@(string.IsNullOrEmpty(definitionId) ? "" : $"?definitionId={definitionId}")"
+    style="width: 100%; height: calc(100vh - 180px); border: 1px solid #dee2e6; border-radius: 4px;"
+    frameborder="0"
+    allowfullscreen>
+</iframe>

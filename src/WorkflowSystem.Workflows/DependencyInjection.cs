@@ -34,7 +34,11 @@ public static class DependencyInjection
                 {
                     ef.UseSqlServer(connectionString);
                     ef.RunMigrations = true;
-                })));
+                }))
+            // 暴露 Elsa REST API（供 Elsa Studio 可视化设计器调用）。
+            .UseWorkflowsApi()
+            // HTTP 活动（设计器中的 HTTP Endpoint 等节点）。
+            .UseHttp());
 
         return services;
     }
