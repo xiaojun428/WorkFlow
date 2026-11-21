@@ -1,0 +1,88 @@
+@model ApprovalTaskDetailDto
+@{
+    ViewData["Title"] = "审批处理";
+    var isPending = Model.Status == ApprovalTaskStatus.Pending;
+}
+
+<div class="container mt-4">
+    <h2>审批处理</h2>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between">
+            <span>@Model.DocumentNo</span>
+            <span class="badge bg-primary">@Model.StepName</span>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">@Model.DocumentTitle</h5>
+            <dl class="row">
+                <dt class="col-sm-3">文档类型</dt>
+                <dd class="col-sm-9">@Model.DocumentTypeName</dd>
+                <dt class="col-sm-3">申请人</dt>
+                <dd class="col-sm-9">@Model.ApplicantName</dd>
+                <dt class="col-sm-3">截止时间</dt>
+                <dd class="col-sm-9">@(Model.DueAtUtc?.ToString("yyyy-MM-dd HH:mm") ?? "—")</dd>
+            </dl>
+
+            @if (Model.Document.FieldValues.Count > 0)
+            {
+                <h6>业务字段</h6>
+                <table class="table table-sm">
+                    <tbody>
+                        @foreach (var fv in Model.Document.FieldValues)
+                        {
+                            <tr>
+                                <td class="w-25 text-muted">@fv.FieldKey</td>
+                                <td>@(fv.ValueText ?? fv.ValueNumber?.ToString() ?? fv.ValueDate?.ToString("yyyy-MM-dd") ?? fv.ValueBoolean?.ToString() ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    @if (isPending)
+    {
+        <div class="card mb-4">
+            <div class="card-header">审批意见</div>
+            <div class="card-body">
+                <form asp-action="Approve" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
+                    <input type="text" name="Comment" class="form-control mb-2" placeholder="审批意见（可选）" />
+                    <button type="submit" class="btn btn-success">通过</button>
+                </form>
+                <form asp-action="Reject" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
+                    <input type="text" name="Comment" class="form-control mb-2" placeholder="驳回原因" />
+                    <button type="submit" class="btn btn-danger">驳回</button>
+                </form>
+                <form asp-action="Return" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
+                    <input type="text" name="Comment" class="form-control mb-2" placeholder="退回说明" />
+                    <button type="submit" class="btn btn-warning">退回申请人</button>
+                </form>
+            </div>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header">审批历史</div>
+        <ul class="list-group list-group-flush">
+            @foreach (var h in Model.History)
+            {
+                <li class="list-group-item">
+                    <span class="text-muted">@h.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm")</span>
+                    <strong>@h.OperatorName</strong>
+                    <span class="badge bg-info">@h.Action</span>
+                    @if (!string.IsNullOrEmpty(h.Comment))
+                    {
+                        <div class="text-muted mt-1">@h.Comment</div>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+</div>

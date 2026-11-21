@@ -1,0 +1,45 @@
+@model PagedResult<ApprovalTaskListItemDto>
+@{
+    ViewData["Title"] = "待我审批";
+}
+
+<div class="container mt-4">
+    <h2>待我审批</h2>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="alert alert-info">暂无待审批的任务。</div>
+    }
+    else
+    {
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>文档编号</th>
+                    <th>标题</th>
+                    <th>类型</th>
+                    <th>当前节点</th>
+                    <th>申请人</th>
+                    <th>截止时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.DocumentNo</td>
+                        <td>@item.DocumentTitle</td>
+                        <td>@item.DocumentTypeName</td>
+                        <td><span class="badge bg-secondary">@item.StepName</span></td>
+                        <td>@item.ApplicantName</td>
+                        <td>@(item.DueAtUtc?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">处理</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

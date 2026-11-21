@@ -3,8 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using WorkflowSystem.Application.Abstractions;
+using WorkflowSystem.Application.Approvals;
+using WorkflowSystem.Application.Audit;
 using WorkflowSystem.Application.Documents;
 using WorkflowSystem.Application.Permissions;
+using WorkflowSystem.Application.Workflows;
 using WorkflowSystem.Infrastructure.Persistence;
 using WorkflowSystem.Infrastructure.Services;
 
@@ -39,7 +42,14 @@ public static class DependencyInjection
         // 权限服务（阶段 5）。
         services.AddScoped<IPermissionService, PermissionService>();
 
-        // 阶段 6+ 注册 IEmailService、审批服务等实现。
+        // 审批与工作流服务（阶段 6，工作流暂用最小实现，阶段 7 替换为 Elsa）。
+        services.AddScoped<IWorkflowService, MinimalWorkflowService>();
+        services.AddScoped<IApprovalService, ApprovalService>();
+
+        // 审计服务（阶段 6）。
+        services.AddScoped<IAuditService, AuditService>();
+
+        // 阶段 7+ 注册 Elsa 工作流、IEmailService 等实现。
 
         return services;
     }
