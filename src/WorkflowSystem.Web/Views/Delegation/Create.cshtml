@@ -1,0 +1,52 @@
+﻿@model WorkflowSystem.Application.Delegations.Dtos.DelegationRequestDto
+@{
+    ViewData["Title"] = "新建委托";
+}
+
+<h2>新建委托</h2>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label class="form-label" for="DelegateUserId">被委托人</label>
+        <select class="form-select" asp-for="DelegateUserId">
+            <option value="">请选择被委托人</option>
+            @foreach (var user in (IEnumerable<WorkflowSystem.Application.Delegations.Dtos.UserOptionDto>)ViewBag.Delegates)
+            {
+                <option value="@user.Id">@user.DisplayName (@user.Email)</option>
+            }
+        </select>
+        <span asp-validation-for="DelegateUserId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="DocumentTypeId">文档类型（留空表示全部类型）</label>
+        <select class="form-select" asp-for="DocumentTypeId">
+            <option value="">全部类型</option>
+            @foreach (var type in (IEnumerable<WorkflowSystem.Application.Documents.Dtos.DocumentTypeDto>)ViewBag.DocumentTypes)
+            {
+                <option value="@type.Id">@type.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="ValidFrom">开始日期</label>
+        <input class="form-control" type="date" asp-for="ValidFrom" />
+        <span asp-validation-for="ValidFrom" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="ValidTo">结束日期</label>
+        <input class="form-control" type="date" asp-for="ValidTo" />
+        <span asp-validation-for="ValidTo" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">保存</button>
+    <a asp-action="Index" class="btn btn-secondary">取消</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

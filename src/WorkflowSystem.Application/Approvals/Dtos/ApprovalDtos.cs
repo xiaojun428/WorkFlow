@@ -43,6 +43,27 @@ public sealed class TransferRequestDto
     public string Comment { get; set; } = string.Empty;
 }
 
+/// <summary>批量审批请求：一次对多个任务执行通过操作。</summary>
+public sealed class BatchApproveRequestDto
+{
+    public List<Guid> ApprovalTaskIds { get; set; } = new();
+    public string Comment { get; set; } = string.Empty;
+}
+
+/// <summary>批量审批结果项：单个任务的审批结果。</summary>
+public sealed record BatchApproveResultItemDto(
+    Guid ApprovalTaskId,
+    string DocumentNo,
+    bool Success,
+    string? Error);
+
+/// <summary>批量审批结果：成功/失败统计与明细。</summary>
+public sealed record BatchApproveResultDto(
+    int TotalCount,
+    int SuccessCount,
+    int FailCount,
+    IReadOnlyList<BatchApproveResultItemDto> Items);
+
 /// <summary>审批历史条目（时间线展示用）。</summary>
 public sealed record ApprovalHistoryItemDto(
     Guid Id,

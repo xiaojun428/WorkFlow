@@ -1,0 +1,65 @@
+﻿@model WorkflowSystem.Application.Documents.Dtos.PagedResult<WorkflowSystem.Application.Audit.Dtos.AuditLogItemDto>
+@{
+    ViewData["Title"] = "审计日志";
+}
+
+<h2>审计日志</h2>
+
+<form method="get" class="row g-3 mb-3">
+    <div class="col-auto">
+        <input type="text" class="form-control" name="Action" placeholder="动作（如 Approve、Remind）" value="@Context.Request.Query["Action"]" />
+    </div>
+    <div class="col-auto">
+        <input type="text" class="form-control" name="EntityType" placeholder="实体类型（如 Document）" value="@Context.Request.Query["EntityType"]" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">筛选</button>
+    </div>
+</form>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>时间</th>
+            <th>动作</th>
+            <th>实体类型</th>
+            <th>实体 Id</th>
+            <th>用户</th>
+            <th>详情</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.OccurredAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                <td><span class="badge bg-info text-dark">@item.Action</span></td>
+                <td>@item.EntityType</td>
+                <td>@(item.EntityId?.ToString("N").Substring(0, 8) ?? "-")</td>
+                <td>@(item.UserId?.ToString("N").Substring(0, 8) ?? "-")</td>
+                <td class="text-truncate" style="max-width: 300px;" title="@item.DetailJson">@item.DetailJson</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalCount == 0)
+{
+    <div class="alert alert-info">暂无审计记录。</div>
+}
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+    <nav>
+        <ul class="pagination">
+            @for (var i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-pageSize="@Model.PageSize"
+                       asp-route-actionFilter="@Context.Request.Query["Action"]" asp-route-entityType="@Context.Request.Query["EntityType"]">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

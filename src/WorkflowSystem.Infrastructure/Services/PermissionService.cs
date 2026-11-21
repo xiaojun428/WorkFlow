@@ -122,4 +122,37 @@ public class PermissionService : IPermissionService
         // 优先级：Hidden(0) 最严格。枚举值越小越严格，取最小值即最严格权限。
         return permissions.Min();
     }
+
+    public async Task<IReadOnlyDictionary<Guid, FieldPermissionType>> GetFieldPermissionsAsync(
+        Guid documentTypeId,
+        IEnumerable<Guid> fieldDefinitionIds,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUser.UserId;
+        if (userId is null)
+            return new Dictionary<Guid, FieldPermissionType>();
+
+        var fieldIds = fieldDefinitionIds.ToList();
+        if (fieldIds.Count == 0)
+            return new Dictionary<Guid, FieldPermissionType>();
+
+        var roleIds = await _db.UserRoles
+            .AsNoTracking()
+            .Where(ur => ur.UserId == userId.Value)
+            .Select(ur => ur.RoleId)
+            .ToListAsync(cancellationToken);
+
+        var rows = await _db.FieldPermissions
+            .AsNoTracking()
+            .Where(fp => fp.DocumentTypeId == documentTypeId
+                         && fieldIds.Contains(fp.FieldDefinitionId)
+                         && roleIds.Contains(fp.RoleId))
+            .Select(fp => new { fp.FieldDefinitionId, fp.PermissionType })
+            .ToListAsync(cancellationToken);
+
+        // 每个字段取最严格权限（枚举值最小者）。
+        return rows
+            .GroupBy(x => x.FieldDefinitionId)
+            .ToDictionary(g => g.Key, g => g.Min(x => x.PermissionType));
+    }
 }

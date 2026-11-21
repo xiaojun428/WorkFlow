@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Globalization;
 using WorkflowSystem.Application;
 using WorkflowSystem.Application.Abstractions;
 using WorkflowSystem.Infrastructure;
@@ -24,8 +27,30 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddWorkflows(builder.Configuration);
 
-// MVC + Razor Views（不引入 React/Vue/Angular）。
-builder.Services.AddControllersWithViews();
+// MVC + Razor Views + 本地化（中英切换，需求 10）。
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization();
+
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+// 支持的中文与英文文化。
+var supportedCultures = new[]
+{
+    new CultureInfo("zh-CN"),
+    new CultureInfo("en-US"),
+};
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.DefaultRequestCulture = new RequestCulture("zh-CN");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+    // 语言选择：优先 query string 的 culture 参数，其次 cookie，最后浏览器 Accept-Language。
+    options.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider { QueryStringKey = "culture" });
+});
+
+// 认证：Entra OIDC（或开发环境回退 Cookie）。
+builder.Services.AddWorkflowAuthentication(builder.Configuration);
 
 // 当前用户上下文（依赖 HttpContext）。
 builder.Services.AddHttpContextAccessor();
@@ -46,6 +71,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// 启动时应用业务库迁移（确保部署后表结构就绪；生产环境也可通过部署脚本显式迁移）。
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<WorkflowSystem.Infrastructure.Persistence.WorkflowDbContext>();
+    db.Database.Migrate();
+}
+
 // 生产环境统一异常处理：不返回堆栈与内部信息。
 if (!app.Environment.IsDevelopment())
 {
@@ -62,6 +94,10 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// 本地化中间件（需在路由后、认证前启用 RequestCulture）。
+app.UseRequestLocalization();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 // 静态资源与健康检查端点。

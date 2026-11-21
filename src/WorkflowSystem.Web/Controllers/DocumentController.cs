@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkflowSystem.Application.Documents;
 using WorkflowSystem.Application.Documents.Dtos;
+using WorkflowSystem.Application.Permissions;
+using WorkflowSystem.Domain.Common;
+using WorkflowSystem.Domain.Enums;
 using WorkflowSystem.Web.Authorization;
 
 namespace WorkflowSystem.Web.Controllers;
@@ -16,11 +19,13 @@ public class DocumentController : Controller
 {
     private readonly IDocumentService _documentService;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IPermissionService _permissionService;
 
-    public DocumentController(IDocumentService documentService, IAuthorizationService authorizationService)
+    public DocumentController(IDocumentService documentService, IAuthorizationService authorizationService, IPermissionService permissionService)
     {
         _documentService = documentService;
         _authorizationService = authorizationService;
+        _permissionService = permissionService;
     }
 
     // GET: /Document —— 文档列表。
@@ -41,6 +46,15 @@ public class DocumentController : Controller
         var documentTypes = await _documentService.GetDocumentTypesAsync(cancellationToken);
         ViewBag.DocumentTypes = documentTypes;
         return View(new CreateDocumentDto());
+    }
+
+    // GET: /Document/FieldDefinitions?documentTypeId=xxx —— 按类型返回字段定义（供前端动态渲染）。
+    [HttpGet]
+    [Authorize(Policy = "permission:Create")]
+    public async Task<IActionResult> FieldDefinitions(Guid documentTypeId, CancellationToken cancellationToken)
+    {
+        var fields = await _documentService.GetFieldDefinitionsAsync(documentTypeId, cancellationToken);
+        return Json(fields);
     }
 
     // POST: /Document/Create
@@ -72,6 +86,15 @@ public class DocumentController : Controller
         if (!auth.Succeeded) return Forbid();
 
         var detail = await _documentService.GetDocumentAsync(id, cancellationToken);
+
+        // 加载字段定义（用于显示中文名）与字段权限（用于裁剪 Hidden 字段）。
+        var fieldDefinitions = await _documentService.GetFieldDefinitionsAsync(detail!.DocumentTypeId, cancellationToken);
+        ViewBag.FieldDefinitions = fieldDefinitions;
+        ViewBag.FieldPermissions = await LoadFieldPermissionsAsync(detail.DocumentTypeId, fieldDefinitions, cancellationToken);
+
+        // 加载附件列表。
+        ViewBag.Files = await _documentService.GetFilesAsync(id, cancellationToken);
+
         return View(detail);
     }
 
@@ -99,8 +122,10 @@ public class DocumentController : Controller
             }).ToList(),
         };
 
-        ViewBag.FieldDefinitions = await _documentService.GetFieldDefinitionsAsync(document.DocumentTypeId, cancellationToken);
+        var fieldDefinitions = await _documentService.GetFieldDefinitionsAsync(document.DocumentTypeId, cancellationToken);
+        ViewBag.FieldDefinitions = fieldDefinitions;
         ViewBag.Document = document;
+        ViewBag.FieldPermissions = await LoadFieldPermissionsAsync(document.DocumentTypeId, fieldDefinitions, cancellationToken);
         return View(model);
     }
 
@@ -118,8 +143,10 @@ public class DocumentController : Controller
         if (!ModelState.IsValid)
         {
             var document = await _documentService.GetDocumentAsync(id, cancellationToken);
-            ViewBag.FieldDefinitions = await _documentService.GetFieldDefinitionsAsync(document!.DocumentTypeId, cancellationToken);
+            var fieldDefinitions = await _documentService.GetFieldDefinitionsAsync(document!.DocumentTypeId, cancellationToken);
+            ViewBag.FieldDefinitions = fieldDefinitions;
             ViewBag.Document = document;
+            ViewBag.FieldPermissions = await LoadFieldPermissionsAsync(document.DocumentTypeId, fieldDefinitions, cancellationToken);
             return View(dto);
         }
 
@@ -140,5 +167,88 @@ public class DocumentController : Controller
 
         await _documentService.SoftDeleteAsync(id, cancellationToken);
         return RedirectToAction(nameof(Index));
+    }
+
+    // ===================== 附件 =====================
+
+    // POST: /Document/UploadFile —— 上传附件（资源级授权 + Anti-forgery）。
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadFile(Guid documentId, IFormFile file, CancellationToken cancellationToken)
+    {
+        var documentEntity = await _documentService.GetDocumentEntityAsync(documentId, cancellationToken);
+        if (documentEntity is null) return NotFound();
+
+        var auth = await _authorizationService.AuthorizeAsync(User, documentEntity, new DocumentOperationRequirement("Edit"));
+        if (!auth.Succeeded) return Forbid();
+
+        if (file is null || file.Length == 0)
+        {
+            TempData["Error"] = "请选择要上传的文件。";
+            return RedirectToAction(nameof(Details), new { id = documentId });
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            await _documentService.UploadFileAsync(documentId, stream, file.FileName, file.ContentType, cancellationToken);
+            TempData["Success"] = "附件上传成功。";
+        }
+        catch (BusinessRuleViolationException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Details), new { id = documentId });
+    }
+
+    // GET: /Document/DownloadFile?documentId=xxx&fileId=yyy —— 下载附件（资源级授权）。
+    [HttpGet]
+    public async Task<IActionResult> DownloadFile(Guid documentId, Guid fileId, CancellationToken cancellationToken)
+    {
+        var documentEntity = await _documentService.GetDocumentEntityAsync(documentId, cancellationToken);
+        if (documentEntity is null) return NotFound();
+
+        var auth = await _authorizationService.AuthorizeAsync(User, documentEntity, new DocumentOperationRequirement("View"));
+        if (!auth.Succeeded) return Forbid();
+
+        var (content, file) = await _documentService.DownloadFileAsync(documentId, fileId, cancellationToken);
+        return File(content, file.MimeType, file.FileName);
+    }
+
+    // POST: /Document/DeleteFile —— 删除附件（资源级授权 + Anti-forgery）。
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteFile(Guid documentId, Guid fileId, CancellationToken cancellationToken)
+    {
+        var documentEntity = await _documentService.GetDocumentEntityAsync(documentId, cancellationToken);
+        if (documentEntity is null) return NotFound();
+
+        var auth = await _authorizationService.AuthorizeAsync(User, documentEntity, new DocumentOperationRequirement("Edit"));
+        if (!auth.Succeeded) return Forbid();
+
+        try
+        {
+            await _documentService.DeleteFileAsync(documentId, fileId, cancellationToken);
+            TempData["Success"] = "附件已删除。";
+        }
+        catch (BusinessRuleViolationException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Details), new { id = documentId });
+    }
+
+    /// <summary>批量加载字段权限（视图层字段裁剪用，避免 N+1）。</summary>
+    private async Task<IReadOnlyDictionary<Guid, FieldPermissionType>> LoadFieldPermissionsAsync(
+        Guid documentTypeId,
+        IReadOnlyList<DocumentFieldDefinitionDto> fieldDefinitions,
+        CancellationToken cancellationToken)
+    {
+        return await _permissionService.GetFieldPermissionsAsync(
+            documentTypeId,
+            fieldDefinitions.Select(f => f.Id),
+            cancellationToken);
     }
 }

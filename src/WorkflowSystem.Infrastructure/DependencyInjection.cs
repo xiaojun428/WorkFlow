@@ -5,7 +5,10 @@ using Microsoft.Extensions.Options;
 using WorkflowSystem.Application.Abstractions;
 using WorkflowSystem.Application.Approvals;
 using WorkflowSystem.Application.Audit;
+using WorkflowSystem.Application.Delegations;
 using WorkflowSystem.Application.Documents;
+using WorkflowSystem.Application.Identity;
+using WorkflowSystem.Application.Notifications;
 using WorkflowSystem.Application.Permissions;
 using WorkflowSystem.Application.Workflows;
 using WorkflowSystem.Infrastructure.Persistence;
@@ -41,15 +44,31 @@ public static class DependencyInjection
 
         // 权限服务（阶段 5）。
         services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IPermissionAdminService, PermissionAdminService>();
+
+        // 外部身份用户同步（阶段 9：Entra 登录后映射到本系统用户）。
+        services.AddScoped<IUserSyncService, UserSyncService>();
 
         // 审批与工作流服务（阶段 7：工作流已切换为 Elsa Workflows 3 实现）。
         services.AddScoped<IWorkflowService, ElsaWorkflowService>();
         services.AddScoped<IApprovalService, ApprovalService>();
 
+        // 代理委托服务（阶段 10：委托审批规则管理）。
+        services.AddScoped<IDelegationService, DelegationService>();
+
         // 审计服务（阶段 6）。
         services.AddScoped<IAuditService, AuditService>();
 
-        // 阶段 7+ 注册 Elsa 工作流、IEmailService 等实现。
+        // 通知邮件服务（阶段 9：Transactional Outbox + 后台发送）。
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddSingleton<IMailSender, LoggingMailSender>();
+
+        // 审批催办配置（需求 7：超时 48h，每 24h 催办一次）。
+        services.Configure<ApprovalReminderOptions>(configuration.GetSection("ApprovalReminder"));
+
+        // 后台服务（阶段 9：邮件发件箱消费 + 审批催办）。
+        services.AddHostedService<MailOutboxProcessor>();
+        services.AddHostedService<ApprovalReminderService>();
 
         return services;
     }

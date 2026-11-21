@@ -56,4 +56,13 @@ public interface IPermissionService
         Guid documentTypeId,
         Guid fieldDefinitionId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 批量查询指定文档类型下多个字段的生效权限，返回「字段定义 Id → 权限」映射（无配置的字段不包含在内，表示默认 Editable）。
+    /// 用于视图层字段裁剪，避免逐字段查询。
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, FieldPermissionType>> GetFieldPermissionsAsync(
+        Guid documentTypeId,
+        IEnumerable<Guid> fieldDefinitionIds,
+        CancellationToken cancellationToken = default);
 }

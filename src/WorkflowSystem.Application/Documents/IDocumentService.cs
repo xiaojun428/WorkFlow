@@ -28,4 +28,18 @@ public interface IDocumentService
 
     // 列表查询
     Task<PagedResult<DocumentListItemDto>> QueryAsync(DocumentQuery query, CancellationToken cancellationToken = default);
+
+    // ===================== 附件 =====================
+
+    /// <summary>查询文档的附件列表（元数据）。</summary>
+    Task<IReadOnlyList<DocumentFileDto>> GetFilesAsync(Guid documentId, CancellationToken cancellationToken = default);
+
+    /// <summary>上传附件：保存物理文件并写入附件元数据。</summary>
+    Task<DocumentFileDto> UploadFileAsync(Guid documentId, Stream content, string fileName, string mimeType, CancellationToken cancellationToken = default);
+
+    /// <summary>下载附件：返回物理文件流与元数据（文件名、MIME）。</summary>
+    Task<(Stream Content, DocumentFileDto File)> DownloadFileAsync(Guid documentId, Guid fileId, CancellationToken cancellationToken = default);
+
+    /// <summary>删除附件（软删除元数据，物理文件延迟删除）。</summary>
+    Task DeleteFileAsync(Guid documentId, Guid fileId, CancellationToken cancellationToken = default);
 }

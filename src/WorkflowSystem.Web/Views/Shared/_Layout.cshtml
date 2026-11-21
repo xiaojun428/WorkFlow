@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - WorkflowSystem.Web</title>
+    <title>@ViewData["Title"] - @Shared["AppName"]</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -13,7 +13,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">WorkflowSystem</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">@Shared["AppName"]</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -21,17 +21,63 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">首页</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">@Shared["Home"]</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Document" asp-action="Index">文档中心</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Document" asp-action="Index">@Shared["DocumentCenter"]</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Approval" asp-action="Pending">待我审批</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Approval" asp-action="Pending">@Shared["PendingApproval"]</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Approval" asp-action="Processed">我已审批</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Approval" asp-action="Processed">@Shared["ProcessedApproval"]</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Delegation" asp-action="Index">@Shared["Delegation"]</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Audit" asp-action="Index">@Shared["AuditLog"]</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Permission" asp-action="Index">@Shared["PermissionManagement"]</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link text-dark dropdown-toggle" href="#" id="cultureDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @Shared["Language"]
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="cultureDropdown">
+                                <li>
+                                    <form asp-controller="Culture" asp-action="Set" method="post">
+                                        <input type="hidden" name="culture" value="zh-CN" />
+                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                        <button type="submit" class="dropdown-item">中文</button>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form asp-controller="Culture" asp-action="Set" method="post">
+                                        <input type="hidden" name="culture" value="en-US" />
+                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                        <button type="submit" class="dropdown-item">English</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="nav-link btn btn-link text-dark">@Shared["Logout"]</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="DevLogin">@Shared["Login"]</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -45,7 +91,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - WorkflowSystem.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - @Shared["AppName"] - <a asp-area="" asp-controller="Home" asp-action="Privacy">@Shared["Privacy"]</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

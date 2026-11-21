@@ -219,6 +219,160 @@ namespace WorkflowSystem.Infrastructure.Persistence.Migrations
                             FieldType = 0,
                             IsActive = true,
                             IsRequired = false
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000061"),
+                            DisplayName = "物料号",
+                            DisplayOrder = 1,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000022"),
+                            FieldKey = "MaterialNo",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000062"),
+                            DisplayName = "EOL 原因",
+                            DisplayOrder = 2,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000022"),
+                            FieldKey = "EolReason",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000063"),
+                            DisplayName = "EOL 生效日期",
+                            DisplayOrder = 3,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000022"),
+                            FieldKey = "EffectiveDate",
+                            FieldType = 2,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000064"),
+                            DisplayName = "替代物料",
+                            DisplayOrder = 4,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000022"),
+                            FieldKey = "ReplacementMaterial",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = false
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000065"),
+                            DisplayName = "库存处理方式",
+                            DisplayOrder = 5,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000022"),
+                            FieldKey = "StockDisposal",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = false
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000071"),
+                            DisplayName = "采购金额",
+                            DisplayOrder = 1,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000023"),
+                            FieldKey = "Amount",
+                            FieldType = 4,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000072"),
+                            DisplayName = "币种",
+                            DisplayOrder = 2,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000023"),
+                            FieldKey = "Currency",
+                            FieldType = 5,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000073"),
+                            DisplayName = "供应商",
+                            DisplayOrder = 3,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000023"),
+                            FieldKey = "Vendor",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000074"),
+                            DisplayName = "采购说明",
+                            DisplayOrder = 4,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000023"),
+                            FieldKey = "Description",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = false
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000081"),
+                            DisplayName = "供应商名称",
+                            DisplayOrder = 1,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000024"),
+                            FieldKey = "VendorName",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000082"),
+                            DisplayName = "统一社会信用代码",
+                            DisplayOrder = 2,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000024"),
+                            FieldKey = "CreditCode",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000083"),
+                            DisplayName = "联系人",
+                            DisplayOrder = 3,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000024"),
+                            FieldKey = "Contact",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000084"),
+                            DisplayName = "联系电话",
+                            DisplayOrder = 4,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000024"),
+                            FieldKey = "Phone",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = true
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000085"),
+                            DisplayName = "供应商类型",
+                            DisplayOrder = 5,
+                            DocumentTypeId = new Guid("00000000-0000-0000-0000-000000000024"),
+                            FieldKey = "VendorType",
+                            FieldType = 0,
+                            IsActive = true,
+                            IsRequired = false
                         });
                 });
 
@@ -306,6 +460,8 @@ namespace WorkflowSystem.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
+
+                    b.HasIndex("UploadedByUserId");
 
                     b.ToTable("DocumentFiles", (string)null);
                 });
@@ -1227,6 +1383,36 @@ namespace WorkflowSystem.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("MailTemplates", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000091"),
+                            BodyTemplate = "您有一项待审批任务。\n文档编号：{{DocumentNo}}\n标题：{{Title}}\n审批步骤：{{StepName}}",
+                            Code = "SubmitNotify",
+                            SubjectTemplate = "【待审批】{{DocumentNo}} - {{StepName}}"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000092"),
+                            BodyTemplate = "您的文档「{{Title}}」已完成全部审批。",
+                            Code = "ApprovalComplete",
+                            SubjectTemplate = "审批完成：{{DocumentNo}}"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000093"),
+                            BodyTemplate = "您的文档「{{Title}}」已被驳回。\n意见：{{Comment}}",
+                            Code = "ApprovalRejected",
+                            SubjectTemplate = "审批驳回：{{DocumentNo}}"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000094"),
+                            BodyTemplate = "您有一项审批任务已超时未处理，请尽快处理。\n文档编号：{{DocumentNo}}\n审批步骤：{{StepName}}",
+                            Code = "Reminder",
+                            SubjectTemplate = "【催办】审批待处理：{{DocumentNo}} - {{StepName}}"
+                        });
                 });
 
             modelBuilder.Entity("WorkflowSystem.Domain.Entities.Permission.FieldPermission", b =>
@@ -1264,11 +1450,20 @@ namespace WorkflowSystem.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("ActedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ActedStatus")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("ApprovalTaskId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CandidateUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("HasActed")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -1338,14 +1533,29 @@ namespace WorkflowSystem.Infrastructure.Persistence.Migrations
                     b.Property<int>("AssignmentType")
                         .HasColumnType("int");
 
+                    b.Property<int>("CompletedApprovals")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CompletedAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("CountersignPercentage")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("DueAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastReminderAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PreviousStepKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("RequiredApprovals")
+                        .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -1597,7 +1807,15 @@ namespace WorkflowSystem.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("WorkflowSystem.Domain.Entities.Identity.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Document");
+
+                    b.Navigation("UploadedByUser");
                 });
 
             modelBuilder.Entity("WorkflowSystem.Domain.Entities.Document.DocumentNumberSequence", b =>

@@ -16,11 +16,20 @@ public interface IApprovalService
     /// <summary>审批通过：推进到下一节点或完成流程。</summary>
     Task ApproveAsync(ApprovalActionDto dto, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// 批量审批通过：对多个任务依次执行通过操作，逐个独立提交，
+    /// 单个任务失败不影响其他任务；返回每个任务的成功/失败结果。
+    /// </summary>
+    Task<BatchApproveResultDto> BatchApproveAsync(BatchApproveRequestDto dto, CancellationToken cancellationToken = default);
+
     /// <summary>驳回：终止流程，文档置为已驳回。</summary>
     Task RejectAsync(ApprovalActionDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>退回申请人：文档置为退回，申请人可编辑后重新提交。</summary>
     Task ReturnAsync(ApprovalActionDto dto, CancellationToken cancellationToken = default);
+
+    /// <summary>退回上一步：退回给上一审批步骤的审批人，需其重新审批。</summary>
+    Task ReturnToPreviousAsync(ApprovalActionDto dto, CancellationToken cancellationToken = default);
 
     /// <summary>申请人撤回：文档置为已撤回，审批任务取消。</summary>
     Task WithdrawAsync(Guid documentId, CancellationToken cancellationToken = default);

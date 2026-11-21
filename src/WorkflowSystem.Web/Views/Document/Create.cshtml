@@ -11,7 +11,7 @@
 
     <div class="mb-3">
         <label asp-for="DocumentTypeId" class="form-label">文档类型</label>
-        <select asp-for="DocumentTypeId" class="form-select" required>
+        <select asp-for="DocumentTypeId" class="form-select" id="documentTypeSelect" required>
             <option value="">-- 请选择 --</option>
             @if (documentTypes != null)
             {
@@ -21,6 +21,7 @@
                 }
             }
         </select>
+        <span asp-validation-for="DocumentTypeId" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
@@ -31,15 +32,84 @@
 
     <div class="mb-3">
         <label asp-for="OwnerDepartmentId" class="form-label">所属部门</label>
-        <input asp-for="OwnerDepartmentId" class="form-control" placeholder="部门 Id（阶段 5 接入部门选择器）" />
+        <input asp-for="OwnerDepartmentId" class="form-control" placeholder="部门 Id" />
+        <span asp-validation-for="OwnerDepartmentId" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <div class="alert alert-warning">
-            动态字段将在阶段 4 后续补充「按文档类型动态渲染」。当前请先创建草稿，再在编辑页填写字段值。
-        </div>
+    <h5>业务字段</h5>
+    <div id="dynamicFields" class="mb-3">
+        <div class="alert alert-light">请先选择文档类型。</div>
     </div>
 
     <button type="submit" class="btn btn-primary">保存草稿</button>
     <a asp-action="Index" class="btn btn-secondary">取消</a>
 </form>
+
+@section Scripts {
+    <script>
+        (function () {
+            var select = document.getElementById('documentTypeSelect');
+            var container = document.getElementById('dynamicFields');
+            var currencyOptions = ['CNY', 'USD', 'EUR', 'JPY', 'GBP', 'HKD'];
+
+            function renderFields(fields) {
+                if (!fields || fields.length === 0) {
+                    container.innerHTML = '<div class="alert alert-light">该文档类型没有定义业务字段。</div>';
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < fields.length; i++) {
+                    var f = fields[i];
+                    var requiredMark = f.isRequired ? ' <span class="text-danger">*</span>' : '';
+                    var inputName = 'FieldValues[' + i + ']';
+                    html += '<div class="mb-3">';
+                    html += '<label class="form-label">' + escapeHtml(f.displayName) + requiredMark + '</label>';
+                    html += '<input type="hidden" name="' + inputName + '.FieldDefinitionId" value="' + f.id + '" />';
+
+                    switch (f.fieldType) {
+                        case 1: // Number
+                        case 4: // Amount
+                            html += '<input type="number" step="any" name="' + inputName + '.ValueNumber" class="form-control" />';
+                            break;
+                        case 2: // Date
+                            html += '<input type="date" name="' + inputName + '.ValueDate" class="form-control" />';
+                            break;
+                        case 3: // Boolean
+                            html += '<select name="' + inputName + '.ValueBoolean" class="form-select"><option value="">-- 请选择 --</option><option value="true">是</option><option value="false">否</option></select>';
+                            break;
+                        case 5: // Currency
+                            html += '<select name="' + inputName + '.ValueText" class="form-select">';
+                            for (var c = 0; c < currencyOptions.length; c++) {
+                                html += '<option value="' + currencyOptions[c] + '">' + currencyOptions[c] + '</option>';
+                            }
+                            html += '</select>';
+                            break;
+                        default: // Text
+                            html += '<input type="text" name="' + inputName + '.ValueText" class="form-control" />';
+                            break;
+                    }
+                    html += '</div>';
+                }
+                container.innerHTML = html;
+            }
+
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, function (m) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+                });
+            }
+
+            select.addEventListener('change', function () {
+                var typeId = select.value;
+                if (!typeId) {
+                    container.innerHTML = '<div class="alert alert-light">请先选择文档类型。</div>';
+                    return;
+                }
+                fetch('/Document/FieldDefinitions?documentTypeId=' + encodeURIComponent(typeId), { headers: { 'Accept': 'application/json' } })
+                    .then(function (r) { return r.json(); })
+                    .then(renderFields)
+                    .catch(function () { container.innerHTML = '<div class="alert alert-danger">加载字段定义失败。</div>'; });
+            });
+        })();
+    </script>
+}

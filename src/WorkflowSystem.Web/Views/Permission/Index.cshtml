@@ -1,0 +1,69 @@
+@{
+    ViewData["Title"] = "权限管理";
+    var roles = ViewBag.Roles as IReadOnlyList<RoleListItemDto>;
+    var documentTypes = ViewBag.DocumentTypes as IReadOnlyList<WorkflowSystem.Application.Documents.Dtos.DocumentTypeDto>;
+}
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<h2 class="mb-4">权限管理</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">角色操作权限</div>
+            <div class="card-body">
+                <p class="text-muted">为每个角色配置操作权限码（如创建、审批、下载附件等）。</p>
+                <div class="list-group">
+                    @foreach (var role in roles!)
+                    {
+                        <a asp-action="RolePermissions" asp-route-roleId="@role.Id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <span>@role.Name @(role.IsSystem ? "<span class='badge bg-secondary'>系统</span>" : "")</span>
+                            <span class="text-primary">配置 →</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">字段权限</div>
+            <div class="card-body">
+                <p class="text-muted">为「角色 × 文档类型」配置字段级权限（隐藏/只读/可编辑/必填）。</p>
+                <form asp-action="FieldPermissions" method="get" class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label">角色</label>
+                        <select name="roleId" class="form-select" required>
+                            <option value="">请选择角色</option>
+                            @foreach (var role in roles!)
+                            {
+                                <option value="@role.Id">@role.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">文档类型</label>
+                        <select name="documentTypeId" class="form-select" required>
+                            <option value="">请选择文档类型</option>
+                            @foreach (var dt in documentTypes!)
+                            {
+                                <option value="@dt.Id">@dt.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">进入配置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

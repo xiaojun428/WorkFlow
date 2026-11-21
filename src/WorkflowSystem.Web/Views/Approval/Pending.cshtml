@@ -6,40 +6,91 @@
 <div class="container mt-4">
     <h2>待我审批</h2>
 
+    @if (TempData["BatchSuccessCount"] is string successCount && TempData["BatchFailCount"] is string failCount)
+    {
+        var fails = int.Parse(failCount);
+        <div class="alert @(fails == 0 ? "alert-success" : "alert-warning") alert-dismissible fade show" role="alert">
+            批量审批完成：成功 <strong>@successCount</strong> 项，失败 <strong>@failCount</strong> 项。
+            @if (fails > 0 && TempData["BatchFailDetails"] is string details && !string.IsNullOrWhiteSpace(details))
+            {
+                <div class="mt-1 small">失败明细：@details</div>
+            }
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     @if (Model.Items.Count == 0)
     {
         <div class="alert alert-info">暂无待审批的任务。</div>
     }
     else
     {
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>文档编号</th>
-                    <th>标题</th>
-                    <th>类型</th>
-                    <th>当前节点</th>
-                    <th>申请人</th>
-                    <th>截止时间</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Items)
-                {
+        <form id="batchForm" asp-action="BatchApprove" method="post">
+            @Html.AntiForgeryToken()
+            <div class="mb-2 d-flex justify-content-between align-items-center">
+                <div>
+                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirmBatch();">批量通过</button>
+                    <span class="ms-2 text-muted small">勾选多个任务后点击「批量通过」可一次性审批。</span>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll" onclick="toggleAll(this);" />
+                    <label class="form-check-label" for="selectAll">全选</label>
+                </div>
+            </div>
+
+            <table class="table table-hover">
+                <thead>
                     <tr>
-                        <td>@item.DocumentNo</td>
-                        <td>@item.DocumentTitle</td>
-                        <td>@item.DocumentTypeName</td>
-                        <td><span class="badge bg-secondary">@item.StepName</span></td>
-                        <td>@item.ApplicantName</td>
-                        <td>@(item.DueAtUtc?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
-                        <td>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">处理</a>
-                        </td>
+                        <th style="width: 40px;"></th>
+                        <th>文档编号</th>
+                        <th>标题</th>
+                        <th>类型</th>
+                        <th>当前节点</th>
+                        <th>申请人</th>
+                        <th>截止时间</th>
+                        <th>操作</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input task-check" type="checkbox"
+                                       name="ApprovalTaskIds" value="@item.Id" />
+                            </td>
+                            <td>@item.DocumentNo</td>
+                            <td>@item.DocumentTitle</td>
+                            <td>@item.DocumentTypeName</td>
+                            <td><span class="badge bg-secondary">@item.StepName</span></td>
+                            <td>@item.ApplicantName</td>
+                            <td>@(item.DueAtUtc?.ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">处理</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </form>
     }
 </div>
+
+@section Scripts {
+    <script>
+        function toggleAll(source) {
+            document.querySelectorAll('.task-check').forEach(function (cb) {
+                cb.checked = source.checked;
+            });
+        }
+
+        function confirmBatch() {
+            var checked = document.querySelectorAll('.task-check:checked').length;
+            if (checked === 0) {
+                alert('请至少勾选一个待审批任务。');
+                return false;
+            }
+            return confirm('确认对选中的 ' + checked + ' 个任务批量审批通过吗？');
+        }
+    </script>
+}

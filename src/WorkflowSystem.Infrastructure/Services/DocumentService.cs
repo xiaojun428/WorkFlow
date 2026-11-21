@@ -20,17 +20,20 @@ public class DocumentService : IDocumentService
     private readonly IDocumentNumberService _numberService;
     private readonly ICurrentUserService _currentUser;
     private readonly IClock _clock;
+    private readonly IFileStorageService _fileStorage;
 
     public DocumentService(
         WorkflowDbContext db,
         IDocumentNumberService numberService,
         ICurrentUserService currentUser,
-        IClock clock)
+        IClock clock,
+        IFileStorageService fileStorage)
     {
         _db = db;
         _numberService = numberService;
         _currentUser = currentUser;
         _clock = clock;
+        _fileStorage = fileStorage;
     }
 
     // ===================== 文档类型 =====================
@@ -244,6 +247,113 @@ public class DocumentService : IDocumentService
             .ToListAsync(cancellationToken);
 
         return new PagedResult<DocumentListItemDto>(items, totalCount, query.Page, query.PageSize);
+    }
+
+    // ===================== 附件 =====================
+
+    public async Task<IReadOnlyList<DocumentFileDto>> GetFilesAsync(Guid documentId, CancellationToken cancellationToken = default)
+    {
+        return await _db.DocumentFiles
+            .AsNoTracking()
+            .Where(f => f.DocumentId == documentId)
+            .OrderByDescending(f => f.CreatedAtUtc)
+            .Select(f => new DocumentFileDto(
+                f.Id,
+                f.FileName,
+                f.SizeBytes,
+                f.MimeType,
+                f.UploadedByUserId,
+                f.UploadedByUser != null ? f.UploadedByUser.DisplayName : string.Empty,
+                f.CreatedAtUtc))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<DocumentFileDto> UploadFileAsync(Guid documentId, Stream content, string fileName, string mimeType, CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUser.UserId
+            ?? throw new BusinessRuleViolationException("当前用户未认证，无法上传附件。");
+
+        var document = await _db.Documents
+            .FirstOrDefaultAsync(x => x.Id == documentId, cancellationToken)
+            ?? throw new NotFoundException("Document", documentId);
+
+        // 仅草稿或退回状态允许上传（审批中/完成后不允许修改附件）。
+        if (document.DocumentStatus is not (DocumentStatus.Draft or DocumentStatus.Returned))
+            throw new BusinessRuleViolationException("只有草稿或退回状态的文档才能上传附件。");
+
+        // 保存物理文件（含扩展名/MIME/大小/哈希校验）。
+        var stored = await _fileStorage.SaveAsync(content, fileName, mimeType, cancellationToken);
+
+        var file = new DocumentFile(documentId, fileName, stored.StorageKey, stored.SizeBytes, stored.MimeType, stored.Sha256Hash, userId);
+        _db.DocumentFiles.Add(file);
+
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            // 元数据写入失败时回滚物理文件，避免孤儿文件。
+            await _fileStorage.DeleteAsync(stored.StorageKey, CancellationToken.None);
+            throw;
+        }
+
+        return await _db.DocumentFiles
+            .AsNoTracking()
+            .Where(f => f.Id == file.Id)
+            .Select(f => new DocumentFileDto(
+                f.Id,
+                f.FileName,
+                f.SizeBytes,
+                f.MimeType,
+                f.UploadedByUserId,
+                f.UploadedByUser != null ? f.UploadedByUser.DisplayName : string.Empty,
+                f.CreatedAtUtc))
+            .FirstAsync(cancellationToken);
+    }
+
+    public async Task<(Stream Content, DocumentFileDto File)> DownloadFileAsync(Guid documentId, Guid fileId, CancellationToken cancellationToken = default)
+    {
+        var file = await _db.DocumentFiles
+            .AsNoTracking()
+            .Include(f => f.UploadedByUser)
+            .FirstOrDefaultAsync(f => f.Id == fileId && f.DocumentId == documentId, cancellationToken)
+            ?? throw new NotFoundException("DocumentFile", fileId);
+
+        var content = await _fileStorage.OpenReadAsync(file.StorageKey, cancellationToken);
+
+        var dto = new DocumentFileDto(
+            file.Id,
+            file.FileName,
+            file.SizeBytes,
+            file.MimeType,
+            file.UploadedByUserId,
+            file.UploadedByUser?.DisplayName ?? string.Empty,
+            file.CreatedAtUtc);
+
+        return (content, dto);
+    }
+
+    public async Task DeleteFileAsync(Guid documentId, Guid fileId, CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUser.UserId
+            ?? throw new BusinessRuleViolationException("当前用户未认证，无法删除附件。");
+
+        var file = await _db.DocumentFiles
+            .FirstOrDefaultAsync(f => f.Id == fileId && f.DocumentId == documentId, cancellationToken)
+            ?? throw new NotFoundException("DocumentFile", fileId);
+
+        var document = await _db.Documents
+            .FirstOrDefaultAsync(x => x.Id == documentId, cancellationToken)
+            ?? throw new NotFoundException("Document", documentId);
+
+        // 仅草稿/退回状态允许删除附件。
+        if (document.DocumentStatus is not (DocumentStatus.Draft or DocumentStatus.Returned))
+            throw new BusinessRuleViolationException("只有草稿或退回状态的文档才能删除附件。");
+
+        // 软删除元数据（物理文件延迟删除，避免误删已共享文件）。
+        file.SoftDelete();
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     // ===================== 私有辅助 =====================

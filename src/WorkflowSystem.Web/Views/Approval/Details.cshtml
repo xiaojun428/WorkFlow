@@ -46,24 +46,43 @@
         <div class="card mb-4">
             <div class="card-header">审批意见</div>
             <div class="card-body">
-                <form asp-action="Approve" method="post" class="d-inline">
+                <form asp-action="Approve" method="post" class="mb-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
                     <input type="text" name="Comment" class="form-control mb-2" placeholder="审批意见（可选）" />
                     <button type="submit" class="btn btn-success">通过</button>
                 </form>
-                <form asp-action="Reject" method="post" class="d-inline">
+                <form asp-action="Reject" method="post" class="mb-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
                     <input type="text" name="Comment" class="form-control mb-2" placeholder="驳回原因" />
                     <button type="submit" class="btn btn-danger">驳回</button>
                 </form>
-                <form asp-action="Return" method="post" class="d-inline">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
-                    <input type="text" name="Comment" class="form-control mb-2" placeholder="退回说明" />
-                    <button type="submit" class="btn btn-warning">退回申请人</button>
-                </form>
+                <div class="d-inline-block me-2">
+                    <form asp-action="Return" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
+                        <input type="text" name="Comment" class="form-control mb-2" placeholder="退回说明" />
+                        <button type="submit" class="btn btn-warning">退回申请人</button>
+                    </form>
+                </div>
+                <div class="d-inline-block me-2">
+                    <form asp-action="ReturnToPrevious" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
+                        <input type="text" name="Comment" class="form-control mb-2" placeholder="退回上一步说明" />
+                        <button type="submit" class="btn btn-outline-warning">退回上一步</button>
+                    </form>
+                </div>
+                <div class="d-inline-block">
+                    <form asp-action="Transfer" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ApprovalTaskId" value="@Model.Id" />
+                        <input type="text" name="NewAssigneeUserId" class="form-control mb-2" placeholder="新审批人 Id" required />
+                        <input type="text" name="Comment" class="form-control mb-2" placeholder="转交说明（可选）" />
+                        <button type="submit" class="btn btn-outline-primary">转交</button>
+                    </form>
+                </div>
             </div>
         </div>
     }

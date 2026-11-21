@@ -2,5 +2,10 @@
 @using WorkflowSystem.Web.Models
 @using WorkflowSystem.Application.Documents.Dtos
 @using WorkflowSystem.Application.Approvals.Dtos
+@using WorkflowSystem.Application.Permissions
 @using WorkflowSystem.Domain.Enums
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
+@inject IStringLocalizer<SharedResource> Shared
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

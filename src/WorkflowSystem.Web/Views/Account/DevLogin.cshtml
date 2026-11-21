@@ -1,0 +1,32 @@
+@{
+    ViewData["Title"] = "开发环境登录";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">开发环境登录（选择测试用户）</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    此页面仅用于开发环境。接入 Microsoft Entra ID 后，请使用企业账号登录。
+                </p>
+                <form asp-action="DevLogin" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">选择身份</label>
+                        <select name="userId" class="form-select">
+                            <option value="alice">Alice（申请人）</option>
+                            <option value="bob">Bob（Manager）</option>
+                            <option value="carol">Carol（财务）</option>
+                            <option value="dave">Dave（QA）</option>
+                            <option value="eve">Eve（采购）</option>
+                            <option value="frank">Frank（管理员）</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">登录</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

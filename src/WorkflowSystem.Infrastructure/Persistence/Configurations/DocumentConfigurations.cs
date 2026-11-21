@@ -119,7 +119,9 @@ public class DocumentFileConfiguration : IEntityTypeConfiguration<DocumentFile>
         builder.Property(x => x.Sha256Hash).HasMaxLength(64).IsRequired();
 
         builder.HasOne(x => x.Document).WithMany(x => x.Files).HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.UploadedByUser).WithMany().HasForeignKey(x => x.UploadedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => x.DocumentId);
+        builder.HasIndex(x => x.UploadedByUserId);
         builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

@@ -241,6 +241,7 @@ public class DocumentFile : SoftDeletableEntity
     public Guid UploadedByUserId { get; private set; }
 
     public Document? Document { get; private set; }
+    public User? UploadedByUser { get; private set; }
 
     private DocumentFile() { }
 

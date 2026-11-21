@@ -1,14 +1,47 @@
 @model DocumentDetailDto
 @{
     ViewData["Title"] = $"文档详情 - {Model.DocumentNo}";
+    var fieldDefinitions = ViewBag.FieldDefinitions as IReadOnlyList<DocumentFieldDefinitionDto>;
+    var fieldPermissions = ViewBag.FieldPermissions as IReadOnlyDictionary<Guid, FieldPermissionType>;
+    var files = ViewBag.Files as IReadOnlyList<DocumentFileDto>;
+    var canEdit = Model.DocumentStatus == DocumentStatus.Draft || Model.DocumentStatus == DocumentStatus.Returned;
+}
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errorMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>@Model.Title</h2>
     <div>
-        @if (Model.DocumentStatus == DocumentStatus.Draft || Model.DocumentStatus == DocumentStatus.Returned)
+        @if (canEdit)
         {
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">编辑</a>
+            <form asp-controller="Approval" asp-action="Submit" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="documentId" value="@Model.Id" />
+                <input type="text" name="Comment" class="form-control form-control-sm d-inline-block w-auto" placeholder="提交备注（可选）" />
+                <button type="submit" class="btn btn-success">提交审批</button>
+            </form>
+        }
+        else if (Model.DocumentStatus == DocumentStatus.InApproval)
+        {
+            <form asp-controller="Approval" asp-action="Withdraw" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="documentId" value="@Model.Id" />
+                <button type="submit" class="btn btn-outline-warning" onclick="return confirm('确认撤回该文档吗？');">撤回</button>
+            </form>
         }
         <a asp-action="Index" class="btn btn-secondary">返回列表</a>
     </div>
@@ -63,8 +96,16 @@
                 <tbody>
                     @foreach (var fv in Model.FieldValues)
                     {
+                        // 字段权限裁剪：Hidden 字段不展示。
+                        var definition = fieldDefinitions?.FirstOrDefault(d => d.Id == fv.FieldDefinitionId);
+                        var permission = fieldPermissions != null && fieldPermissions.TryGetValue(fv.FieldDefinitionId, out var p)
+                            ? p
+                            : FieldPermissionType.Editable;
+                        if (permission == FieldPermissionType.Hidden) continue;
+
+                        var displayName = definition?.DisplayName ?? fv.FieldKey;
                         <tr>
-                            <td>@fv.FieldKey</td>
+                            <td>@displayName</td>
                             <td>
                                 @(fv.ValueNumber?.ToString() ?? fv.ValueText ?? fv.ValueDate?.ToString("yyyy-MM-dd") ?? fv.ValueBoolean?.ToString() ?? "—")
                             </td>
@@ -78,4 +119,67 @@
 else
 {
     <div class="alert alert-light">该文档暂无业务字段值。</div>
+}
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>附件</span>
+        @if (canEdit)
+        {
+            <form asp-action="UploadFile" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="documentId" value="@Model.Id" />
+                <input type="file" name="file" class="form-control form-control-sm" required />
+                <button type="submit" class="btn btn-sm btn-primary">上传</button>
+            </form>
+        }
+    </div>
+    <div class="card-body">
+        @if (files is { Count: > 0 })
+        {
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr><th>文件名</th><th>大小</th><th>上传人</th><th>上传时间</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in files)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-action="DownloadFile" asp-route-documentId="@Model.Id" asp-route-fileId="@f.Id">@f.FileName</a>
+                            </td>
+                            <td>@FormatFileSize(f.SizeBytes)</td>
+                            <td>@f.UploadedByName</td>
+                            <td>@f.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                @if (canEdit)
+                                {
+                                    <form asp-action="DeleteFile" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="documentId" value="@Model.Id" />
+                                        <input type="hidden" name="fileId" value="@f.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确认删除该附件吗？');">删除</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="text-muted">暂无附件。</div>
+        }
+    </div>
+</div>
+
+@functions {
+    static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:0.0} KB";
+        if (bytes < 1024 * 1024 * 1024) return $"{bytes / 1024.0 / 1024.0:0.0} MB";
+        return $"{bytes / 1024.0 / 1024.0 / 1024.0:0.0} GB";
+    }
 }

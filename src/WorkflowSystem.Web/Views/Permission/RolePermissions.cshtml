@@ -1,0 +1,56 @@
+@model RolePermissionConfigDto
+@{
+    ViewData["Title"] = $"角色权限 - {Model.RoleName}";
+    var roles = ViewBag.Roles as IReadOnlyList<RoleListItemDto>;
+}
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>角色操作权限：@Model.RoleName @(Model.IsSystem ? "(系统角色)" : "")</h2>
+    <a asp-action="Index" class="btn btn-secondary">返回</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="RolePermissions" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="RoleId" value="@Model.RoleId" />
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">勾选该角色应拥有的操作权限码（保存后全量覆盖）。</span>
+                <button type="submit" class="btn btn-primary">保存权限</button>
+            </div>
+
+            <div class="row">
+                @foreach (var p in Model.AllPermissions)
+                {
+                    <div class="col-md-4 col-lg-3 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="PermissionIds" value="@p.Id" id="perm-@p.Id"
+                                   @(Model.GrantedPermissionIds.Contains(p.Id) ? "checked" : "") />
+                            <label class="form-check-label" for="perm-@p.Id">
+                                <code>@p.Code</code>
+                                @if (!string.IsNullOrWhiteSpace(p.Description))
+                                {
+                                    <small class="text-muted d-block">@p.Description</small>
+                                }
+                            </label>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">保存权限</button>
+            </div>
+        </form>
+    </div>
+</div>

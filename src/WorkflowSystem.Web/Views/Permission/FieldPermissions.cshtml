@@ -1,0 +1,80 @@
+@model IReadOnlyList<FieldPermissionListItemDto>
+@{
+    ViewData["Title"] = "字段权限配置";
+    var roles = ViewBag.Roles as IReadOnlyList<RoleListItemDto>;
+    var documentTypes = ViewBag.DocumentTypes as IReadOnlyList<WorkflowSystem.Application.Documents.Dtos.DocumentTypeDto>;
+    var fieldPermissionTypes = ViewBag.FieldPermissionTypes as IReadOnlyList<dynamic>;
+    var roleId = (Guid)ViewBag.RoleId;
+    var documentTypeId = (Guid)ViewBag.DocumentTypeId;
+    var roleName = Model.FirstOrDefault()?.RoleName ?? "";
+    var documentTypeName = Model.FirstOrDefault()?.DocumentTypeName ?? "";
+}
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>字段权限：@roleName × @documentTypeName</h2>
+    <a asp-action="Index" class="btn btn-secondary">返回</a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-light">该文档类型暂无字段定义，或角色/类型无效。</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="FieldPermissions" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="RoleId" value="@roleId" />
+                <input type="hidden" name="DocumentTypeId" value="@documentTypeId" />
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">为每个字段选择权限（「默认」= 未配置，继承默认可编辑）。</span>
+                    <button type="submit" class="btn btn-primary">保存字段权限</button>
+                </div>
+
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>字段</th>
+                            <th>Key</th>
+                            <th style="width: 220px;">权限</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.FieldDisplayName</td>
+                                <td><code>@item.FieldKey</code></td>
+                                <td>
+                                    <select name="FieldPermissions[@item.FieldDefinitionId]" class="form-select form-select-sm">
+                                        <option value="">默认（可编辑）</option>
+                                        @foreach (var pt in fieldPermissionTypes!)
+                                        {
+                                            var ptValue = (WorkflowSystem.Domain.Enums.FieldPermissionType)pt.Value;
+                                            var selected = item.PermissionType.HasValue && item.PermissionType.Value == ptValue;
+                                            <option value="@((int)ptValue)" selected="@selected">@pt.Name</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">保存字段权限</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}

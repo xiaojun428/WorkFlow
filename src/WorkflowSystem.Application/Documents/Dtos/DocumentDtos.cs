@@ -85,6 +85,16 @@ public sealed class DocumentFieldValueInputDto
     public bool? ValueBoolean { get; set; }
 }
 
+/// <summary>文档附件 DTO（仅元数据，不含物理文件内容）。</summary>
+public sealed record DocumentFileDto(
+    Guid Id,
+    string FileName,
+    long SizeBytes,
+    string MimeType,
+    Guid UploadedByUserId,
+    string UploadedByName,
+    DateTime CreatedAtUtc);
+
 /// <summary>文档查询参数（分页 + 筛选 + 排序）。</summary>
 public sealed class DocumentQuery
 {

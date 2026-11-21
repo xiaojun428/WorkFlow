@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Home" xml:space="preserve">
+    <value>首页</value>
+  </data>
+  <data name="DocumentCenter" xml:space="preserve">
+    <value>文档中心</value>
+  </data>
+  <data name="PendingApproval" xml:space="preserve">
+    <value>待我审批</value>
+  </data>
+  <data name="ProcessedApproval" xml:space="preserve">
+    <value>我已审批</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Privacy" xml:space="preserve">
+    <value>隐私</value>
+  </data>
+  <data name="AppName" xml:space="preserve">
+    <value>文档审批系统</value>
+  </data>
+  <data name="Delegation" xml:space="preserve">
+    <value>代理委托</value>
+  </data>
+  <data name="AuditLog" xml:space="preserve">
+    <value>审计日志</value>
+  </data>
+  <data name="PermissionManagement" xml:space="preserve">
+    <value>权限管理</value>
+  </data>
+</root>

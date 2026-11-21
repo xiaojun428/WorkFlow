@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using WorkflowSystem.Domain.Constants;
 using WorkflowSystem.Domain.Entities.Document;
 using WorkflowSystem.Domain.Entities.Identity;
+using WorkflowSystem.Domain.Entities.Notification;
 using WorkflowSystem.Domain.Enums;
 
 namespace WorkflowSystem.Infrastructure.Persistence.Seed;
@@ -55,6 +56,10 @@ public static class SeedData
         SeedUsers(modelBuilder);
         SeedDocumentTypes(modelBuilder);
         SeedBudgetFieldDefinitions(modelBuilder);
+        SeedEolFieldDefinitions(modelBuilder);
+        SeedPurchaseFieldDefinitions(modelBuilder);
+        SeedVendorFieldDefinitions(modelBuilder);
+        SeedMailTemplates(modelBuilder);
     }
 
     private static void SeedDepartments(ModelBuilder modelBuilder)
@@ -184,6 +189,53 @@ public static class SeedData
             new { Id = new Guid("00000000-0000-0000-0000-000000000051"), DocumentTypeId = DocTypeBudget, FieldKey = "Amount", DisplayName = "金额", FieldType = FieldType.Amount, IsRequired = true, DisplayOrder = 1, IsActive = true },
             new { Id = new Guid("00000000-0000-0000-0000-000000000052"), DocumentTypeId = DocTypeBudget, FieldKey = "Currency", DisplayName = "币种", FieldType = FieldType.Currency, IsRequired = true, DisplayOrder = 2, IsActive = true },
             new { Id = new Guid("00000000-0000-0000-0000-000000000053"), DocumentTypeId = DocTypeBudget, FieldKey = "Description", DisplayName = "预算说明", FieldType = FieldType.Text, IsRequired = false, DisplayOrder = 3, IsActive = true }
+        );
+    }
+
+    private static void SeedEolFieldDefinitions(ModelBuilder modelBuilder)
+    {
+        // EOL 申请字段：物料号、EOL 原因、EOL 生效日期、替代物料、库存处理方式。
+        modelBuilder.Entity<DocumentFieldDefinition>().HasData(
+            new { Id = new Guid("00000000-0000-0000-0000-000000000061"), DocumentTypeId = DocTypeEol, FieldKey = "MaterialNo", DisplayName = "物料号", FieldType = FieldType.Text, IsRequired = true, DisplayOrder = 1, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000062"), DocumentTypeId = DocTypeEol, FieldKey = "EolReason", DisplayName = "EOL 原因", FieldType = FieldType.Text, IsRequired = true, DisplayOrder = 2, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000063"), DocumentTypeId = DocTypeEol, FieldKey = "EffectiveDate", DisplayName = "EOL 生效日期", FieldType = FieldType.Date, IsRequired = true, DisplayOrder = 3, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000064"), DocumentTypeId = DocTypeEol, FieldKey = "ReplacementMaterial", DisplayName = "替代物料", FieldType = FieldType.Text, IsRequired = false, DisplayOrder = 4, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000065"), DocumentTypeId = DocTypeEol, FieldKey = "StockDisposal", DisplayName = "库存处理方式", FieldType = FieldType.Text, IsRequired = false, DisplayOrder = 5, IsActive = true }
+        );
+    }
+
+    private static void SeedPurchaseFieldDefinitions(ModelBuilder modelBuilder)
+    {
+        // 采购申请字段：采购金额、币种、供应商、采购说明。
+        modelBuilder.Entity<DocumentFieldDefinition>().HasData(
+            new { Id = new Guid("00000000-0000-0000-0000-000000000071"), DocumentTypeId = DocTypePurchase, FieldKey = "Amount", DisplayName = "采购金额", FieldType = FieldType.Amount, IsRequired = true, DisplayOrder = 1, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000072"), DocumentTypeId = DocTypePurchase, FieldKey = "Currency", DisplayName = "币种", FieldType = FieldType.Currency, IsRequired = true, DisplayOrder = 2, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000073"), DocumentTypeId = DocTypePurchase, FieldKey = "Vendor", DisplayName = "供应商", FieldType = FieldType.Text, IsRequired = true, DisplayOrder = 3, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000074"), DocumentTypeId = DocTypePurchase, FieldKey = "Description", DisplayName = "采购说明", FieldType = FieldType.Text, IsRequired = false, DisplayOrder = 4, IsActive = true }
+        );
+    }
+
+    private static void SeedVendorFieldDefinitions(ModelBuilder modelBuilder)
+    {
+        // 供应商申请字段：供应商名称、统一社会信用代码、联系人、电话、供应商类型。
+        modelBuilder.Entity<DocumentFieldDefinition>().HasData(
+            new { Id = new Guid("00000000-0000-0000-0000-000000000081"), DocumentTypeId = DocTypeVendor, FieldKey = "VendorName", DisplayName = "供应商名称", FieldType = FieldType.Text, IsRequired = true, DisplayOrder = 1, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000082"), DocumentTypeId = DocTypeVendor, FieldKey = "CreditCode", DisplayName = "统一社会信用代码", FieldType = FieldType.Text, IsRequired = true, DisplayOrder = 2, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000083"), DocumentTypeId = DocTypeVendor, FieldKey = "Contact", DisplayName = "联系人", FieldType = FieldType.Text, IsRequired = true, DisplayOrder = 3, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000084"), DocumentTypeId = DocTypeVendor, FieldKey = "Phone", DisplayName = "联系电话", FieldType = FieldType.Text, IsRequired = true, DisplayOrder = 4, IsActive = true },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000085"), DocumentTypeId = DocTypeVendor, FieldKey = "VendorType", DisplayName = "供应商类型", FieldType = FieldType.Text, IsRequired = false, DisplayOrder = 5, IsActive = true }
+        );
+    }
+
+    private static void SeedMailTemplates(ModelBuilder modelBuilder)
+    {
+        // 邮件模板：审批通知、审批通过、审批驳回、超时催办。
+        // 占位符约定：{{DocumentNo}} 文档编号、{{Title}} 标题、{{StepName}} 审批步骤、{{Applicant}} 申请人、{{Comment}} 意见。
+        modelBuilder.Entity<MailTemplate>().HasData(
+            new { Id = new Guid("00000000-0000-0000-0000-000000000091"), Code = "SubmitNotify", SubjectTemplate = "【待审批】{{DocumentNo}} - {{StepName}}", BodyTemplate = "您有一项待审批任务。\n文档编号：{{DocumentNo}}\n标题：{{Title}}\n审批步骤：{{StepName}}" },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000092"), Code = "ApprovalComplete", SubjectTemplate = "审批完成：{{DocumentNo}}", BodyTemplate = "您的文档「{{Title}}」已完成全部审批。" },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000093"), Code = "ApprovalRejected", SubjectTemplate = "审批驳回：{{DocumentNo}}", BodyTemplate = "您的文档「{{Title}}」已被驳回。\n意见：{{Comment}}" },
+            new { Id = new Guid("00000000-0000-0000-0000-000000000094"), Code = "Reminder", SubjectTemplate = "【催办】审批待处理：{{DocumentNo}} - {{StepName}}", BodyTemplate = "您有一项审批任务已超时未处理，请尽快处理。\n文档编号：{{DocumentNo}}\n审批步骤：{{StepName}}" }
         );
     }
 }

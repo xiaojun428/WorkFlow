@@ -3,6 +3,7 @@
     ViewData["Title"] = "编辑文档";
     var document = ViewBag.Document as DocumentDetailDto;
     var fieldDefinitions = ViewBag.FieldDefinitions as IReadOnlyList<DocumentFieldDefinitionDto>;
+    var fieldPermissions = ViewBag.FieldPermissions as IReadOnlyDictionary<Guid, FieldPermissionType>;
 }
 
 <h2>编辑文档</h2>
@@ -26,6 +27,12 @@
             var definition = fieldDefinitions.FirstOrDefault(d => d.Id == fieldValue.FieldDefinitionId);
             if (definition == null) continue;
 
+            // 字段权限裁剪：Hidden 不显示；无配置视为 Editable。
+            var permission = fieldPermissions != null && fieldPermissions.TryGetValue(definition.Id, out var p)
+                ? p
+                : FieldPermissionType.Editable;
+            var isReadOnly = permission == FieldPermissionType.ReadOnly;
+
             <input type="hidden" asp-for="FieldValues[i].FieldDefinitionId" />
 
             <div class="mb-3">
@@ -38,20 +45,31 @@
                 {
                     case FieldType.Number:
                     case FieldType.Amount:
-                        <input type="number" step="any" asp-for="FieldValues[i].ValueNumber" class="form-control" />
+                        <input type="number" step="any" asp-for="FieldValues[i].ValueNumber" class="form-control" disabled="@isReadOnly" />
                         break;
                     case FieldType.Date:
-                        <input type="date" asp-for="FieldValues[i].ValueDate" class="form-control" />
+                        <input type="date" asp-for="FieldValues[i].ValueDate" class="form-control" disabled="@isReadOnly" />
                         break;
                     case FieldType.Boolean:
-                        <select asp-for="FieldValues[i].ValueBoolean" class="form-select">
+                        <select asp-for="FieldValues[i].ValueBoolean" class="form-select" disabled="@isReadOnly">
                             <option value="">-- 请选择 --</option>
                             <option value="true">是</option>
                             <option value="false">否</option>
                         </select>
                         break;
+                    case FieldType.Currency:
+                        <select asp-for="FieldValues[i].ValueText" class="form-select" disabled="@isReadOnly">
+                            <option value="">-- 请选择币种 --</option>
+                            <option value="CNY">CNY（人民币）</option>
+                            <option value="USD">USD（美元）</option>
+                            <option value="EUR">EUR（欧元）</option>
+                            <option value="JPY">JPY（日元）</option>
+                            <option value="GBP">GBP（英镑）</option>
+                            <option value="HKD">HKD（港币）</option>
+                        </select>
+                        break;
                     default:
-                        <input type="text" asp-for="FieldValues[i].ValueText" class="form-control" />
+                        <input type="text" asp-for="FieldValues[i].ValueText" class="form-control" disabled="@isReadOnly" />
                         break;
                 }
             </div>
